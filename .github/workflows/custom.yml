@@ -26,7 +26,7 @@ on:
         description: 'Reset Button GPIO'
         required: true
         type: number
-        default: 3
+        default: 8
       sysled_pin:
         description: 'System LED GPIO'
         required: true
