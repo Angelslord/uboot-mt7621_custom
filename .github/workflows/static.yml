@@ -1,0 +1,43 @@
+name: Build customized u-boot
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build MT7621 u-boot
+    runs-on: ubuntu-22.04
+    strategy:
+       fail-fast: false
+
+    steps:
+      - name: Checkout U-Boot Source
+        uses: actions/checkout@v4
+        with:
+          path: uboot-mt7621
+
+      - name: Install Essential Packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install swig python2-dev
+          echo 'Switching to Python2 as default'
+          sudo rm /usr/bin/python
+          sudo ln -s /usr/bin/python2 /usr/bin/python
+
+      - name: Download OpenWrt Toolchain
+        run: |
+          wget -O - https://github.com/DragonBluep/uboot-mt7621/releases/download/20230517/openwrt-toolchain-ramips-mt7621_gcc-12.3.0_musl.Linux-x86_64.tar.xz \
+            | tar --xz -xf -
+
+      - name: Compile U-Boot
+        working-directory: uboot-mt7621
+        run: |
+          make mt7621_nand_template_defconfig
+          make CROSS_COMPILE=$(cd ../openwrt*/toolchain-mipsel*/bin; pwd)'/mipsel-openwrt-linux-' STAGING_DIR=$(cd ../openwrt*/toolchain-mipsel*/bin; pwd)
+          make savedefconfig
+
+      - name: Upload Binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: u-boot
+          path: "uboot-mt7621/archive/"
