@@ -1,4 +1,4 @@
-name: Build customized u-boot
+name: Build Static Config U-Boot
 
 on:
   workflow_dispatch:
