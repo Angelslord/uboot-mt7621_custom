@@ -63,13 +63,6 @@
 		#reset-cells = <1>;
 	};
 
-	reboot: resetctl-reboot {
-		compatible = "resetctl-reboot";
-
-		resets = <&rstctrl RST_SYS>;
-		reset-names = "sysreset";
-	};
-
 	memc: memctrl@1e005000 {
 		compatible = "mediatek,mt7621-memc", "syscon";
 		reg = <0x1e005000 0x1000>;
