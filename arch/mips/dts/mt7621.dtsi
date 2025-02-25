@@ -126,16 +126,6 @@
 		};
 	};
 
-	watchdog: watchdog@1e000100 {
-		compatible = "mediatek,mt7621-wdt";
-		reg = <0x1e000100 0x40>;
-
-		resets = <&rstctrl RST_TIMER>;
-		reset-names = "wdt";
-
-		status = "disabled";
-	};
-
 	gpio: gpio@1e000600 {
 		#address-cells = <1>;
 		#size-cells = <0>;
