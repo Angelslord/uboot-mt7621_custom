@@ -273,6 +273,9 @@ static void mac_handler(enum httpd_uri_handler_status status,
         
         mac1_val = httpd_request_find_value(request, "mac1");
         mac2_val = httpd_request_find_value(request, "mac2");
+
+	printf("Received MAC1: %s\n", mac1_val ? mac1_val->data : "NULL");
+        printf("Received MAC2: %s\n", mac2_val ? mac2_val->data : "NULL");
         
         if (!mac1_val || !mac2_val) {
             response->info.code = 400;
@@ -289,10 +292,13 @@ static void mac_handler(enum httpd_uri_handler_status status,
             response->size = strlen(response->data);
             return;
         }
+	    
+	printf("Setting MAC1: %s\n", mac1_val->data);
+        printf("Setting MAC2: %s\n", mac2_val->data);
         
-	setenv("ethaddr", mac1_val->data);
-	setenv("eth1addr", mac2_val->data);
-	saveenv();
+	env_set("ethaddr", mac1_val->data);
+        env_set("eth1addr", mac2_val->data);
+        env_save();
         
         response->info.code = 200;
         response->info.connection_close = 1;
