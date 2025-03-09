@@ -3,20 +3,64 @@
 <head>
     <title>MediaTek System Recovery Mode</title>
     <link rel="stylesheet" type="text/css" href="/style.css">
+    <style>
+        .tab {
+            display: inline-block;
+            padding: 10px 20px;
+            cursor: pointer;
+            background: #ddd;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+        .tab.active {
+            background: #fff;
+            border-bottom: 2px solid #fff;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 2px solid #ddd;
+            border-radius: 0 5px 5px 5px;
+            background: #fff;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+    <script>
+        function openTab(tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tab");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active");
+            }
+            document.getElementById(tabName).style.display = "block";
+            event.currentTarget.classList.add("active");
+        }
+    </script>
 </head>
 <body>
     <div id="banner">
         MediaTek U-Boot System Recovery Mode
     </div>
-    <div id="main">
+    <div>
+        <div class="tab active" onclick="openTab('firmware-tab')">Firmware Update</div>
+        <div class="tab" onclick="openTab('mac-tab')">MAC Address Configuration</div>
+    </div>
+    
+    <div id="firmware-tab" class="tab-content active">
         <p>Upload new firmware:</p>
         <form action="/upload" method="post" enctype="multipart/form-data">
             <p><input type="file" name="firmware" /></p>
             <p><input type="submit" id="submit" value="Upload" /></p>
         </form>
-
-        <hr>
-
+    </div>
+    
+    <div id="mac-tab" class="tab-content">
         <p>Update MAC Addresses:</p>
         <form action="/set_mac" method="post">
             <label for="mac1">MAC Address 1:</label>
