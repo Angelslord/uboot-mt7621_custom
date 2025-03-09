@@ -290,9 +290,9 @@ static void mac_handler(enum httpd_uri_handler_status status,
             return;
         }
         
-	env_set("ethaddr", mac1_val->data);
-	env_set("eth1addr", mac2_val->data);
-	env_save();
+	setenv("ethaddr", mac1_val->data);
+	setenv("eth1addr", mac2_val->data);
+	saveenv();
         
         response->info.code = 200;
         response->info.connection_close = 1;
