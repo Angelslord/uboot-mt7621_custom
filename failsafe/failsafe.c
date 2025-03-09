@@ -282,15 +282,8 @@ static void mac_handler(enum httpd_uri_handler_status status,
         }
 
         // Convert MAC strings to binary format
-        if (!eth_parse_enetaddr(mac1_val->data, enetaddr1) ||
-            !eth_parse_enetaddr(mac2_val->data, enetaddr2)) {
-            printf("Error: Invalid MAC address format\n");
-            response->info.code = 400;
-            response->info.connection_close = 1;
-            response->data = "Invalid MAC address format!";
-            response->size = strlen(response->data);
-            return;
-        }
+        eth_parse_enetaddr(mac1_val->data, enetaddr1);
+        eth_parse_enetaddr(mac2_val->data, enetaddr2);
 
         // Debug: Confirm the MACs are valid before setting them
         printf("Setting MAC1: %pM\n", enetaddr1);
