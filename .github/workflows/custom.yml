@@ -92,7 +92,7 @@ jobs:
       - name: Install essential packages
         run: |
           sudo apt-get update
-          sudo apt-get install swig python2-dev libc-dev
+          sudo apt-get install swig python2-dev build-essential
           echo 'switch to python2 as default'
           sudo rm /usr/bin/python
           sudo ln -s /usr/bin/python2 /usr/bin/python
@@ -100,7 +100,8 @@ jobs:
       - name: Download OpenWrt toolchain
         run: |
           wget -O - https://github.com/DragonBluep/uboot-mt7621/releases/download/20230517/openwrt-toolchain-ramips-mt7621_gcc-12.3.0_musl.Linux-x86_64.tar.xz \
-            | tar --xz -xf -
+            | tar --xz -xf - \
+            echo "$PWD/openwrt-toolchain-ramips-mt7621_gcc-12.3.0_musl.Linux-x86_64/bin" >> $GITHUB_PATH
 
       - name: Set old DDR timing parameters
         if:  ${{ inputs.oldparam }}
@@ -110,9 +111,10 @@ jobs:
       - name: Compile
         working-directory: uboot-mt7621
         run: |
-          ./customize.sh '${{ inputs.flash }}' '${{ inputs.mtdparts }}' '${{ inputs.kernel_offset }}' '${{ inputs.reset_pin }}' \
-            '${{ inputs.sysled_pin }}' '${{ inputs.cpufreq }}' '${{ inputs.ramfreq }}' '${{ inputs.ddrparam }}' '${{ inputs.baudrate }}'
-
+          CROSS_COMPILE: mips-openwrt-linux-  \ 
+          ARCH: mips      \                     
+          ./customize.sh "${{ inputs.flash }}" "${{ inputs.mtdparts }}" "${{ inputs.kernel_offset }}" "${{ inputs.reset_pin }}" \
+            "${{ inputs.sysled_pin }}" "${{ inputs.cpufreq }}" "${{ inputs.ramfreq }}" "${{ inputs.ddrparam }}" "${{ inputs.baudrate }}"
       - name: Upload binaries
         uses: actions/upload-artifact@v4
         with:
