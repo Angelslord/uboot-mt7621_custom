@@ -10,6 +10,8 @@
 #include <common.h>
 #include <malloc.h>
 #include <net/tcp.h>
+#include <environment.h>
+#include <net.h>
 #include <net/httpd.h>
 #include <u-boot/md5.h>
 #include "fs.h"
