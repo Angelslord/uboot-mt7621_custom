@@ -12,8 +12,6 @@
 #include <net/tcp.h>
 #include <net/httpd.h>
 #include <u-boot/md5.h>
-#include <environment.h>     // Correct header for environment functions
-
 #include "fs.h"
 
 static u32 upload_data_id;
@@ -257,18 +255,34 @@ static void mac_handler(enum httpd_uri_handler_status status,
                         struct httpd_request *request,
                         struct httpd_response *response) {
     if (status == HTTP_CB_NEW) {
-        char *body = (char *)request->data;
-        char mac1[18] = {0}, mac2[18] = {0};
+        struct httpd_form_value *mac1_val, *mac2_val;
+        uchar enetaddr1[6], enetaddr2[6];
 
-        printf("Raw HTTP POST Body: %s\n", body);
+        // Debug: Print when the handler is triggered
+        printf("Received HTTP request in mac_handler\n");
 
-        // Manually extract mac1 and mac2
-        sscanf(body, "mac1=%17[^&]&mac2=%17s", mac1, mac2);
+        // Extract MAC addresses from the request
+        mac1_val = httpd_request_find_value(request, "mac1");
+        mac2_val = httpd_request_find_value(request, "mac2");
 
-        printf("Extracted MAC1: %s\n", mac1);
-        printf("Extracted MAC2: %s\n", mac2);
+        // Debug: Print extracted values
+        printf("Extracted MAC1: %s\n", mac1_val ? mac1_val->data : "NULL");
+        printf("Extracted MAC2: %s\n", mac2_val ? mac2_val->data : "NULL");
 
-        if (strlen(mac1) != 17 || strlen(mac2) != 17) {
+        // If MAC addresses are missing, return a 400 error
+        if (!mac1_val || !mac2_val) {
+            printf("Error: Missing MAC address fields\n");
+            response->info.code = 400;
+            response->info.connection_close = 1;
+            response->data = "Missing MAC address fields";
+            response->size = strlen(response->data);
+            return;
+        }
+
+        // Convert MAC strings to binary format
+        if (!eth_parse_enetaddr(mac1_val->data, enetaddr1) ||
+            !eth_parse_enetaddr(mac2_val->data, enetaddr2)) {
+            printf("Error: Invalid MAC address format\n");
             response->info.code = 400;
             response->info.connection_close = 1;
             response->data = "Invalid MAC address format!";
@@ -276,13 +290,16 @@ static void mac_handler(enum httpd_uri_handler_status status,
             return;
         }
 
-        printf("Setting MAC1: %s\n", mac1);
-        printf("Setting MAC2: %s\n", mac2);
+        // Debug: Confirm the MACs are valid before setting them
+        printf("Setting MAC1: %pM\n", enetaddr1);
+        printf("Setting MAC2: %pM\n", enetaddr2);
 
-        env_set("ethaddr", mac1);
-        env_set("eth1addr", mac2);
+        // Set and save the MAC addresses correctly using U-Boot's helper function
+        eth_env_set_enetaddr("ethaddr", enetaddr1);
+        eth_env_set_enetaddr("eth1addr", enetaddr2);
         env_save();
 
+        // Send a success response
         response->info.code = 200;
         response->info.connection_close = 1;
         response->data = "MAC addresses updated successfully!";
