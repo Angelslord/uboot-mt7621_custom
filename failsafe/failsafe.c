@@ -257,13 +257,35 @@ static void mac_handler(enum httpd_uri_handler_status status,
                         struct httpd_request *request,
                         struct httpd_response *response) {
     if (status == HTTP_CB_NEW) {
-        // Print raw HTTP request data for debugging
-        printf("Received HTTP request. Data size: %zu\n", request->size);
-        printf("Raw HTTP Request Data: %s\n", (char *)request->data);
+        char *body = (char *)request->data;
+        char mac1[18] = {0}, mac2[18] = {0};
+
+        printf("Raw HTTP POST Body: %s\n", body);
+
+        // Manually extract mac1 and mac2
+        sscanf(body, "mac1=%17[^&]&mac2=%17s", mac1, mac2);
+
+        printf("Extracted MAC1: %s\n", mac1);
+        printf("Extracted MAC2: %s\n", mac2);
+
+        if (strlen(mac1) != 17 || strlen(mac2) != 17) {
+            response->info.code = 400;
+            response->info.connection_close = 1;
+            response->data = "Invalid MAC address format!";
+            response->size = strlen(response->data);
+            return;
+        }
+
+        printf("Setting MAC1: %s\n", mac1);
+        printf("Setting MAC2: %s\n", mac2);
+
+        env_set("ethaddr", mac1);
+        env_set("eth1addr", mac2);
+        env_save();
 
         response->info.code = 200;
         response->info.connection_close = 1;
-        response->data = "Debug: Request received!";
+        response->data = "MAC addresses updated successfully!";
         response->size = strlen(response->data);
     }
 }
