@@ -251,6 +251,42 @@ static void not_found_handler(enum httpd_uri_handler_status status,
 	}
 }
 
+static void mac_handler(enum httpd_uri_handler_status status,
+                        struct httpd_request *request,
+                        struct httpd_response *response) {
+    if (status == HTTP_CB_NEW) {
+        struct httpd_form_value *mac1_val, *mac2_val;
+        
+        mac1_val = httpd_request_find_value(request, "mac1");
+        mac2_val = httpd_request_find_value(request, "mac2");
+        
+        if (!mac1_val || !mac2_val) {
+            response->info.code = 400;
+            response->info.connection_close = 1;
+            response->data = "Missing MAC address fields";
+            response->size = strlen(response->data);
+            return;
+        }
+        
+        if (!is_valid_mac(mac1_val->data) || !is_valid_mac(mac2_val->data)) {
+            response->info.code = 400;
+            response->info.connection_close = 1;
+            response->data = "Invalid MAC address format";
+            response->size = strlen(response->data);
+            return;
+        }
+        
+        setenv("ethaddr", mac1_val->data);
+        setenv("eth1addr", mac2_val->data);
+        saveenv();
+        
+        response->info.code = 200;
+        response->info.connection_close = 1;
+        response->data = "MAC addresses updated successfully!";
+        response->size = strlen(response->data);
+    }
+}
+
 int start_web_failsafe(void)
 {
 	struct httpd_instance *inst;
@@ -271,6 +307,7 @@ int start_web_failsafe(void)
 	httpd_register_uri_handler(inst, "/flashing", &flashing_handler, NULL);
 	httpd_register_uri_handler(inst, "/result", &result_handler, NULL);
 	httpd_register_uri_handler(inst, "/style.css", &style_handler, NULL);
+	httpd_register_uri_handler(inst, "/set_mac", &mac_handler, NULL);
 	httpd_register_uri_handler(inst, "", &not_found_handler, NULL);
 
 	net_loop(TCP);
@@ -291,6 +328,18 @@ static int do_httpd(cmd_tbl_t *cmdtp, int flag, int argc,
 		do_reset(NULL, 0, 0, NULL);
 
 	return ret;
+}
+
+// Helper function to validate MAC address format
+static int is_valid_mac(const char *mac) {
+    int i;
+    if (strlen(mac) != 17)
+        return 0;
+    for (i = 0; i < 17; i++) {
+        if ((i % 3 == 2 && mac[i] != ':') || (i % 3 != 2 && !isxdigit(mac[i])))
+            return 0;
+    }
+    return 1;
 }
 
 U_BOOT_CMD(httpd, 1, 0, do_httpd,
