@@ -6,7 +6,6 @@
  *
  */
 
-#include <ctype.h>   // For isxdigit
 #include <env.h>     // For setenv and saveenv
 #include <common.h>
 #include <malloc.h>
@@ -282,7 +281,7 @@ static void mac_handler(enum httpd_uri_handler_status status,
             return;
         }
         
-        if (!is_valid_mac(mac1_val->data) || !is_valid_mac(mac2_val->data)) {
+        if (!is_valid_ethaddr(mac1_val->data) || !is_valid_ethaddr(mac2_val->data)) {
             response->info.code = 400;
             response->info.connection_close = 1;
             response->data = "Invalid MAC address format";
