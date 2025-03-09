@@ -12,7 +12,7 @@
 #include <net/tcp.h>
 #include <net/httpd.h>
 #include <u-boot/md5.h>
-#include <u-boot/env.h>     // Correct header for environment functions
+#include <environment.h>     // Correct header for environment functions
 
 #include "fs.h"
 
