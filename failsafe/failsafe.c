@@ -6,6 +6,8 @@
  *
  */
 
+#include <ctype.h>   // For isxdigit
+#include <env.h>     // For setenv and saveenv
 #include <common.h>
 #include <malloc.h>
 #include <net/tcp.h>
@@ -251,6 +253,18 @@ static void not_found_handler(enum httpd_uri_handler_status status,
 	}
 }
 
+// Helper function to validate MAC address format
+static int is_valid_mac(const char *mac) {
+    int i;
+    if (strlen(mac) != 17)
+        return 0;
+    for (i = 0; i < 17; i++) {
+        if ((i % 3 == 2 && mac[i] != ':') || (i % 3 != 2 && !isxdigit(mac[i])))
+            return 0;
+    }
+    return 1;
+}
+
 static void mac_handler(enum httpd_uri_handler_status status,
                         struct httpd_request *request,
                         struct httpd_response *response) {
@@ -328,18 +342,6 @@ static int do_httpd(cmd_tbl_t *cmdtp, int flag, int argc,
 		do_reset(NULL, 0, 0, NULL);
 
 	return ret;
-}
-
-// Helper function to validate MAC address format
-static int is_valid_mac(const char *mac) {
-    int i;
-    if (strlen(mac) != 17)
-        return 0;
-    for (i = 0; i < 17; i++) {
-        if ((i % 3 == 2 && mac[i] != ':') || (i % 3 != 2 && !isxdigit(mac[i])))
-            return 0;
-    }
-    return 1;
 }
 
 U_BOOT_CMD(httpd, 1, 0, do_httpd,
