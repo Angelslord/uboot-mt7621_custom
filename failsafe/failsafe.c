@@ -269,37 +269,34 @@ static void mac_handler(enum httpd_uri_handler_status status,
                         struct httpd_request *request,
                         struct httpd_response *response) {
     if (status == HTTP_CB_NEW) {
-        struct httpd_form_value *mac1_val, *mac2_val;
-        
-        mac1_val = httpd_request_find_value(request, "mac1");
-        mac2_val = httpd_request_find_value(request, "mac2");
+        char *body = request->body;
+        char mac1[18] = {0}, mac2[18] = {0};
 
-	printf("Received MAC1: %s\n", mac1_val ? mac1_val->data : "NULL");
-        printf("Received MAC2: %s\n", mac2_val ? mac2_val->data : "NULL");
-        
-        if (!mac1_val || !mac2_val) {
+        // Print raw request body
+        printf("Raw HTTP POST Body: %s\n", body);
+
+        // Manually extract mac1 and mac2
+        sscanf(body, "mac1=%17[^&]&mac2=%17s", mac1, mac2);
+
+        // Print extracted MACs
+        printf("Extracted MAC1: %s\n", mac1);
+        printf("Extracted MAC2: %s\n", mac2);
+
+        if (strlen(mac1) != 17 || strlen(mac2) != 17) {
             response->info.code = 400;
             response->info.connection_close = 1;
-            response->data = "Missing MAC address fields";
+            response->data = "Invalid MAC address format!";
             response->size = strlen(response->data);
             return;
         }
-        
-        if (!is_valid_ethaddr(mac1_val->data) || !is_valid_ethaddr(mac2_val->data)) {
-            response->info.code = 400;
-            response->info.connection_close = 1;
-            response->data = "Invalid MAC address format";
-            response->size = strlen(response->data);
-            return;
-        }
-	    
-	printf("Setting MAC1: %s\n", mac1_val->data);
-        printf("Setting MAC2: %s\n", mac2_val->data);
-        
-	env_set("ethaddr", mac1_val->data);
-        env_set("eth1addr", mac2_val->data);
+
+        printf("Setting MAC1: %s\n", mac1);
+        printf("Setting MAC2: %s\n", mac2);
+
+        env_set("ethaddr", mac1);
+        env_set("eth1addr", mac2);
         env_save();
-        
+
         response->info.code = 200;
         response->info.connection_close = 1;
         response->data = "MAC addresses updated successfully!";
