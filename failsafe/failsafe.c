@@ -6,12 +6,13 @@
  *
  */
 
-#include <env.h>     // For setenv and saveenv
+#include <linux/string.h>   // For string operations
 #include <common.h>
 #include <malloc.h>
 #include <net/tcp.h>
 #include <net/httpd.h>
 #include <u-boot/md5.h>
+#include <u-boot/env.h>     // Correct header for environment functions
 
 #include "fs.h"
 
@@ -289,9 +290,9 @@ static void mac_handler(enum httpd_uri_handler_status status,
             return;
         }
         
-        setenv("ethaddr", mac1_val->data);
-        setenv("eth1addr", mac2_val->data);
-        saveenv();
+	env_set("ethaddr", mac1_val->data);
+	env_set("eth1addr", mac2_val->data);
+	env_save();
         
         response->info.code = 200;
         response->info.connection_close = 1;
