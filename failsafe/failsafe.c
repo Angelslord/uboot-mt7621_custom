@@ -260,9 +260,6 @@ static void mac_handler(enum httpd_uri_handler_status status,
     if (status == HTTP_CB_NEW) {
 	      output_plain_file(response, "success.html"); 
               printf("Raw HTTP Request Data:\n");
-        for (size_t i = 0; i < request->content_length; i++) {
-            putc(((char *)request->content)[i]);
-        }
         printf("\n--- END OF REQUEST ---\n");
 	response->info.code = 200;
         response->info.connection_close = 1;
