@@ -254,45 +254,19 @@ static void not_found_handler(enum httpd_uri_handler_status status,
 }
 
 static void mac_handler(enum httpd_uri_handler_status status,
-                        struct httpd_request *request,
-                        struct httpd_response *response) {
+        struct httpd_request *request,
+        struct httpd_response *response) 
+{
     if (status == HTTP_CB_NEW) {
-        struct httpd_form_value *mac1_val, *mac2_val;
-        uchar enetaddr1[6], enetaddr2[6];
-
-        // Extract MAC addresses using the same method as firmware upload
-        mac1_val = httpd_request_find_value(request, "mac1");
-        mac2_val = httpd_request_find_value(request, "mac2");
-
-        printf("Extracted MAC1: %s\n", mac1_val ? mac1_val->data : "NULL");
-        printf("Extracted MAC2: %s\n", mac2_val ? mac2_val->data : "NULL");
-
-        // If MAC addresses are missing, return a 400 error
-        if (!mac1_val || !mac2_val) {
-            response->info.code = 400;
-            response->info.connection_close = 1;
-            response->data = "Missing MAC address fields";
-            response->size = strlen(response->data);
-            return;
+	      output_plain_file(response, "success.html"); 
+              printf("Raw HTTP Request Data:\n");
+        for (size_t i = 0; i < request->content_length; i++) {
+            putc(((char *)request->content)[i]);
         }
-
-        // Convert MAC addresses to binary format
-        eth_parse_enetaddr(mac1_val->data, enetaddr1);
-        eth_parse_enetaddr(mac2_val->data, enetaddr2);
-
-        // Debugging: Print converted MACs
-        printf("Setting MAC1: %pM\n", enetaddr1);
-        printf("Setting MAC2: %pM\n", enetaddr2);
-
-        // Set and save the MAC addresses in U-Boot environment
-        eth_env_set_enetaddr("ethaddr", enetaddr1);
-        eth_env_set_enetaddr("eth1addr", enetaddr2);
-        env_save();
-
-        // Send a success response
-        response->info.code = 200;
+        printf("\n--- END OF REQUEST ---\n");
+	response->info.code = 200;
         response->info.connection_close = 1;
-        response->data = "MAC addresses updated successfully!";
+        response->data = "Debug: Request received!";
         response->size = strlen(response->data);
     }
 }
