@@ -260,20 +260,15 @@ static void mac_handler(enum httpd_uri_handler_status status,
         struct httpd_form_value *mac1_val, *mac2_val;
         uchar enetaddr1[6], enetaddr2[6];
 
-        // Debug: Print when the handler is triggered
-        printf("Received HTTP request in mac_handler\n");
-
-        // Extract MAC addresses from the request
+        // Extract MAC addresses using the same method as firmware upload
         mac1_val = httpd_request_find_value(request, "mac1");
         mac2_val = httpd_request_find_value(request, "mac2");
 
-        // Debug: Print extracted values
         printf("Extracted MAC1: %s\n", mac1_val ? mac1_val->data : "NULL");
         printf("Extracted MAC2: %s\n", mac2_val ? mac2_val->data : "NULL");
 
         // If MAC addresses are missing, return a 400 error
         if (!mac1_val || !mac2_val) {
-            printf("Error: Missing MAC address fields\n");
             response->info.code = 400;
             response->info.connection_close = 1;
             response->data = "Missing MAC address fields";
@@ -281,15 +276,15 @@ static void mac_handler(enum httpd_uri_handler_status status,
             return;
         }
 
-        // Convert MAC strings to binary format
+        // Convert MAC addresses to binary format
         eth_parse_enetaddr(mac1_val->data, enetaddr1);
         eth_parse_enetaddr(mac2_val->data, enetaddr2);
 
-        // Debug: Confirm the MACs are valid before setting them
+        // Debugging: Print converted MACs
         printf("Setting MAC1: %pM\n", enetaddr1);
         printf("Setting MAC2: %pM\n", enetaddr2);
 
-        // Set and save the MAC addresses correctly using U-Boot's helper function
+        // Set and save the MAC addresses in U-Boot environment
         eth_env_set_enetaddr("ethaddr", enetaddr1);
         eth_env_set_enetaddr("eth1addr", enetaddr2);
         env_save();
@@ -301,6 +296,7 @@ static void mac_handler(enum httpd_uri_handler_status status,
         response->size = strlen(response->data);
     }
 }
+
 
 int start_web_failsafe(void)
 {
