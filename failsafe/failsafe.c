@@ -6,7 +6,10 @@
  *
  */
 
-#include <linux/string.h>   // For string operations
+#include <linux/string.h>  // For string operations
+#include <linux/mtd/mtd.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include <common.h>
 #include <malloc.h>
 #include <net/tcp.h>
@@ -15,6 +18,8 @@
 #include <net/httpd.h>
 #include <u-boot/md5.h>
 #include "fs.h"
+
+
 
 static u32 upload_data_id;
 static const void *upload_data;
@@ -254,6 +259,22 @@ static void not_found_handler(enum httpd_uri_handler_status status,
 }
 
 static void mac_handler(enum httpd_uri_handler_status status,
+	struct httpd_request *request,
+	struct httpd_response *response)
+{
+	if (status == HTTP_CB_NEW) {
+		read_mac_from_mtd();  // Read MAC address before displaying
+		response->status = HTTP_RESP_STD;
+		response->info.code = 200;
+		response->info.connection_close = 1;
+		response->info.content_type = "text/plain";
+		response->data = mac_address;
+		response->size = strlen(mac_address);
+	}
+}
+
+
+static void mac_handler(enum httpd_uri_handler_status status,
                         struct httpd_request *request,
                         struct httpd_response *response) {
     if (status == HTTP_CB_NEW) {
@@ -305,6 +326,47 @@ static void mac_handler(enum httpd_uri_handler_status status,
     }
 }
 
+#define MAC_ADDRESS_OFFSET 57344  // 0xE000 in decimal
+#define MAC_ADDRESS_LENGTH 12     // Length of MAC in bytes
+
+static char mac_address[18] = "00:00:00:00:00:00";
+
+static int read_mac_from_mtd(void) {
+    int fd;
+    unsigned char raw_mac[MAC_ADDRESS_LENGTH];
+
+    // Open MTD2 (Factory Partition)
+    fd = open("/dev/mtd2", O_RDONLY);
+    if (fd < 0) {
+        printf("Error: Cannot open /dev/mtd2\n");
+        return -1;
+    }
+
+    // Seek to MAC Address Location
+    if (lseek(fd, MAC_ADDRESS_OFFSET, SEEK_SET) < 0) {
+        printf("Error: lseek failed\n");
+        close(fd);
+        return -1;
+    }
+
+    // Read MAC Address
+    if (read(fd, raw_mac, MAC_ADDRESS_LENGTH) != MAC_ADDRESS_LENGTH) {
+        printf("Error: Failed to read MAC\n");
+        close(fd);
+        return -1;
+    }
+    
+    close(fd);
+
+    // Convert MAC to human-readable format
+    snprintf(mac_address, sizeof(mac_address), 
+             "%02X:%02X:%02X:%02X:%02X:%02X",
+             raw_mac[0], raw_mac[1], raw_mac[2],
+             raw_mac[3], raw_mac[4], raw_mac[5]);
+
+    return 0;
+}
+
 
 int start_web_failsafe(void)
 {
@@ -327,6 +389,7 @@ int start_web_failsafe(void)
 	httpd_register_uri_handler(inst, "/result", &result_handler, NULL);
 	httpd_register_uri_handler(inst, "/style.css", &style_handler, NULL);
 	httpd_register_uri_handler(inst, "/set_mac", &mac_handler, NULL);
+	httpd_register_uri_handler(inst, "/mac", &mac_handler, NULL);
 	httpd_register_uri_handler(inst, "", &not_found_handler, NULL);
 
 	net_loop(TCP);
