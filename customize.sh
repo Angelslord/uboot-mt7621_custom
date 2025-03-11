@@ -21,7 +21,7 @@ cd $(dirname "$0")
 
 echo "Parse flash type: $1"
 # simple check if partition table is valid
-if [ -z $( echo -n "$2" | grep '),-(firmware)') ]; then
+if [[ -z $(echo -n "$2" | grep -E '),-\((firmware|ubi)\)') ]]; then
 	echo "Invalid mtd partition table!"
 	exit 1
 fi
