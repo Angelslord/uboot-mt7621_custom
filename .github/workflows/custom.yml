@@ -92,7 +92,10 @@ jobs:
       - name: Install essential packages
         run: |
           sudo apt-get update
-          sudo apt-get install build-essential libc-dev musl-dev swig python2-dev
+          sudo apt-get install -y build-essential libc-dev musl-dev \
+                                  linux-libc-dev \
+                                  libgcc-12-dev \
+                                  swig python2-dev
           echo 'switch to python2 as default'
           sudo rm /usr/bin/python
           sudo ln -s /usr/bin/python2 /usr/bin/python
