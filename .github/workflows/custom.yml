@@ -92,10 +92,7 @@ jobs:
       - name: Install essential packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libc-dev musl-dev \
-                                  linux-libc-dev \
-                                  libgcc-12-dev \
-                                  swig python2-dev
+          sudo apt-get install -y swig python2-dev
           echo 'switch to python2 as default'
           sudo rm /usr/bin/python
           sudo ln -s /usr/bin/python2 /usr/bin/python
@@ -115,14 +112,7 @@ jobs:
         env:
           CROSS_COMPILE: mips-openwrt-linux-  # Set cross-compiler prefix
           ARCH: mips
-          SYSROOT: ${{ github.workspace }}/openwrt-toolchain-ramips-mt7621_gcc-12.3.0_musl.Linux-x86_64/toolchain-mipsel_24kc_gcc-12.3.0_musl
-          CFLAGS: "-I${SYSROOT}/include -I${SYSROOT}/include/linux -I${SYSROOT}/include/sys"
-          LDFLAGS: "-L${SYSROOT}/lib"
         run: |
-          export CFLAGS="${CFLAGS}"
-          export LDFLAGS="${LDFLAGS}"
-          export CC="${CROSS_COMPILE}gcc --sysroot=${SYSROOT}"
-          
           ./customize.sh '${{ inputs.flash }}' '${{ inputs.mtdparts }}' '${{ inputs.kernel_offset }}' '${{ inputs.reset_pin }}' \
             '${{ inputs.sysled_pin }}' '${{ inputs.cpufreq }}' '${{ inputs.ramfreq }}' '${{ inputs.ddrparam }}' '${{ inputs.baudrate }}'
 
