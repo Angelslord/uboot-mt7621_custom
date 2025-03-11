@@ -110,6 +110,14 @@ jobs:
         working-directory: uboot-mt7621
         run: sed -i 's/0x0C000000/0x0A000000/g' ./arch/mips/mach-mt7621/dramc-legacy/dramc.S
 
+      - name: Debug - Check for fcntl.h and sysroot
+        run: |
+          echo "Checking system header locations..."
+          find /usr/ -name fcntl.h || echo "fcntl.h not found in /usr/"
+          find /usr/ -name unistd.h || echo "unistd.h not found in /usr/"
+          find $PWD/openwrt-toolchain-ramips-mt7621_gcc-12.3.0_musl.Linux-x86_64 -name fcntl.h || echo "fcntl.h not found in OpenWrt toolchain"
+          find $PWD/openwrt-toolchain-ramips-mt7621_gcc-12.3.0_musl.Linux-x86_64 -name unistd.h || echo "unistd.h not found in OpenWrt toolchain"
+
       - name: Compile
         working-directory: uboot-mt7621
         env:
