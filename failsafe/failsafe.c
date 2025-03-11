@@ -8,7 +8,7 @@
 
 #include <linux/string.h>  // For string operations
 #include <linux/mtd/mtd.h>
-#include <sys/fcntl.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <common.h>
 #include <malloc.h>
